@@ -1,3 +1,6 @@
+## Students
+- Charles Patrick
+
 # Gestionnaire de Dépenses — Node.js
 ### Projet Capstone DevOps
 

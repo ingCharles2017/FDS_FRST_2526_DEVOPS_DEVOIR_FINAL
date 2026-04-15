@@ -1,3 +1,5 @@
+// Expense Tracker - Charles Patrick
+
 /**
  * Server Entry Point
  * Express.js application for Expense Tracker

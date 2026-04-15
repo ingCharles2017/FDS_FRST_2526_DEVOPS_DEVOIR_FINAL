@@ -32,7 +32,7 @@ services:
 
     # Nom du conteneur (pour faciliter les tests/debug)
     # Conseil: Utilisez votre nom pour personnaliser
-    container_name: ???        # Tâche: expense-tracker-nodejs ou expense-tracker-[votre nom sans esoace ou vos initiales]
+    container_name: expense-tracker-nodejs-charlespatrick       # Tâche: expense-tracker-nodejs ou expense-tracker-[votre nom sans esoace ou vos initiales]
 
     # Charger les variables d'environnement depuis .env.docker
     # En local: Docker Compose charge depuis .env.docker
