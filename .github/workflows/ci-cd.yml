@@ -155,7 +155,7 @@ jobs:
       # Conseil: Quel endpoint sa-vous confirmer que l'app est vivante? 
       #          Regardez src/server.js pour les routes disponibles
       - name: Verify application is responding
-        run: curl -f http://localhost:3000/ || exit 1
+        run: curl -f http://localhost:3000/health || exit 1
           # Tâche: Complétez la commande curl avec le port approprié
           # Tâche: Complétez l'URL avec l'endpoint approprié
       
