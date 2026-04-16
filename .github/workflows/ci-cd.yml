@@ -11,11 +11,11 @@ name: Expense Tracker CI/CD # Tâche: Donnez un nom au pipeline (ex: "Expense Tr
 on:
   # Déclencheur 1: Quand du code est poussé (push)
   push:
-    branches: [ main, feature/** ]  # Tâche: Quelles branches déclencher? Conseil: Incluez main et branches de features
+    branches: [main, feature/**]  # Tâche: Quelles branches déclencher? Conseil: Incluez main et branches de features
   
   # Déclencheur 2: Quand une pull request est créée
   pull_request:
-    branches: [ main ]  # Tâche: Quelles branches pour les PR? Conseil: Au minimum la branche principale
+    branches: [main]  # Tâche: Quelles branches pour les PR? Conseil: Au minimum la branche principale
 
 # ============================================================================
 # SECTION 2: JOBS (TRAVAUX)
@@ -63,8 +63,8 @@ jobs:
       #   - npm cache = réutiliser les dépendances téléchargées précédemment
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'  # Tâche: Quelle version Node.js? Conseil: Vérifiez .node-version ou package.json
-          cache: 'npm'        # Tâche: Quelle dépendance manager cacher? Conseil: npm, yarn, ou pnpm
+          node-version: '24.13.1'  # Tâche: Quelle version Node.js? Conseil: Vérifiez .node-version ou package.json
+          cache: 'npm'             # Tâche: Quelle dépendance manager cacher? Conseil: npm, yarn, ou pnpm
       
       
       # ====================================================================
@@ -85,6 +85,12 @@ jobs:
       # Module 4: Automatiser les tests dans le pipeline
       # If any test fails → job fails → pipeline RED ❌
       - run: npm test  # Tâche: Quelle commande lance les tests? Conseil: npm [script-name]
+
+      # ====================================================================
+      # ÉTAPE 5: Construire l'image Docker
+      # ====================================================================
+      - name: Build Docker image
+        run: docker build -t expense-tracker-nodejs:charlespatrick .
   
   # ========================================================================
   # JOB 2: dockerfile-verify - Vérifier que le Dockerfile fonctionne
@@ -112,7 +118,7 @@ jobs:
       # -t [nom:version] = Nommer et versionner l'image
       # . = Utiliser le répertoire courant comme contexte de build
       - name: Build Docker image
-        run: docker build -t expense-tracker-nodejs:charlespatrick . # Tâche: Quelle commande pour construire l'image? 
+        run: docker build -t expense-tracker-nodejs:charlespatrick .
          
       
       
@@ -128,7 +134,12 @@ jobs:
       #   --name = Identifier le conteneur
       # Module 6: Docker — Exécuter des conteneurs
       - name: Start Docker container
-        run: docker run -d -p 3000:3000 --name expense-tracker-test expense-tracker-nodejs:charlespatrick # Tâche: Quelle commande pour lancer le conteneur? 
+        run: |
+          docker run -d \
+            --name test-container \
+            -p 3000:3000 \
+            -e DATABASE_URL=postgresql://postgres:password@localhost:5432/expense_tracker \
+            expense-tracker-nodejs:charlespatrick
       
       
       # ====================================================================
@@ -161,7 +172,7 @@ jobs:
       # docker stop = Arrêter un conteneur en cours d'exécution
       # Nettoyage: libérer le port 3000 pour les prochains tests
       - name: Stop Docker container
-        run: docker stop expense-tracker-test # Tâche: Quelle commande pour arrêter le conteneur? Conseil: docker stop [nom_conteneur]
+        run: docker stop test-container # Tâche: Quelle commande pour arrêter le conteneur? Conseil: docker stop [nom_conteneur]
     
   
   # ========================================================================
@@ -185,10 +196,10 @@ jobs:
     # Module 7: Docker Compose — Configuration via variables
     # Conseil: Trouvez les valeurs dans docker-compose.yml ou votre configuration
     env:
-      DB_HOST: db          # Tâche: Service name dans docker-compose? Conseil: Pas 'localhost'
-      DB_PORT: 5432        # Tâche: Port PostgreSQL? Conseil: Standard database port
-      DB_NAME: ${{ secrets.DB_NAME }}        # Variable secrète depuis GitHub
-      DB_USER: ${{ secrets.DB_USER }}        # Variable secrète depuis GitHub
+      DB_HOST: db                          # Tâche: Service name dans docker-compose? Conseil: Pas 'localhost'
+      DB_PORT: 5432                        # Tâche: Port PostgreSQL? Conseil: Standard database port
+      DB_NAME: ${{ secrets.DB_NAME }}      # Variable secrète depuis GitHub
+      DB_USER: ${{ secrets.DB_USER }}      # Variable secrète depuis GitHub
       DB_PASSWORD: ${{ secrets.DB_PASSWORD }}  # Variable secrète depuis GitHub
       NODE_ENV: production
     
@@ -270,7 +281,7 @@ jobs:
       # Flags disponibles: up, down, logs, ps
       # Module 7: Docker Compose — Orchestrer multi-conteneurs
       - name: Start services with docker compose
-        run: docker compose up -d  # Tâche: Quelle commande + flags? Conseil: Démarrer en arrière-plan
+        run: docker-compose up -d  # Tâche: Quelle commande + flags? Conseil: Démarrer en arrière-plan
       
       
       # ====================================================================
@@ -279,7 +290,7 @@ jobs:
       # Pourquoi attendre plus longtemps que dockerfile-verify?
       # PostgreSQL démarre plus lentement que Node.js seul
       - name: Wait for services to start
-        run: sleep 5
+        run: sleep 15
       
       
       # ====================================================================
@@ -311,7 +322,7 @@ jobs:
       # Nettoyage: éviter de laisser des processus/ports actifs
       # Module 7: Gestion du cycle de vie docker-compose
       - name: Stop all services
-        run: docker compose down # Tâche: Quelle commande pour arrêter tous les services? 
+        run: docker-compose down # Tâche: Quelle commande pour arrêter tous les services? 
 
 
 
