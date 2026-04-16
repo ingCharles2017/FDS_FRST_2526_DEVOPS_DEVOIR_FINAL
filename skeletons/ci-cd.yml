@@ -63,7 +63,7 @@ jobs:
       #   - npm cache = réutiliser les dépendances téléchargées précédemment
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'  # Tâche: Quelle version Node.js? Conseil: Vérifiez .node-version ou package.json
+          node-version: '24'  # ✅ Corrigé: cohérent avec version locale 24.13.1
           cache: 'npm'        # Tâche: Quelle dépendance manager cacher? Conseil: npm, yarn, ou pnpm
       
       
@@ -112,8 +112,7 @@ jobs:
       # -t [nom:version] = Nommer et versionner l'image
       # . = Utiliser le répertoire courant comme contexte de build
       - name: Build Docker image
-        run: docker build -t expense-tracker-nodejs:charlespatrick . # Tâche: Quelle commande pour construire l'image? 
-         
+        run: docker build -t expense-tracker-nodejs:charlespatrick . # Tâche: Quelle commande pour construire l'image?
       
       
       # ====================================================================
@@ -127,8 +126,14 @@ jobs:
       #   -p PORT_EXTERNE:PORT_INTERNE = Mapper un port
       #   --name = Identifier le conteneur
       # Module 6: Docker — Exécuter des conteneurs
+      # ✅ Corrigé: ajout de DATABASE_URL et NODE_ENV pour éviter un crash au démarrage
       - name: Start Docker container
-        run: docker run -d -p 3000:3000 --name expense-tracker-test expense-tracker-nodejs:charlespatrick # Tâche: Quelle commande pour lancer le conteneur? 
+        run: |
+          docker run -d -p 3000:3000 \
+            --name expense-tracker-test \
+            -e DATABASE_URL=postgresql://postgres:password@localhost:5432/expense_tracker \
+            -e NODE_ENV=production \
+            expense-tracker-nodejs:charlespatrick
       
       
       # ====================================================================
@@ -195,6 +200,19 @@ jobs:
     steps:
       # Récupérer le code
       - uses: actions/checkout@v4 # Tâche: Quelle action pour cloner le code? Conseil: Même que les autres jobs
+
+
+      # ====================================================================
+      # ÉTAPE 0: Créer le fichier .env.docker pour CI/CD
+      # ====================================================================
+      # Pourquoi?
+      #   - docker-compose.yml référence env_file: .env.docker
+      #   - Ce fichier est dans .gitignore (jamais commité)
+      #   - En CI/CD on le recrée depuis .env.docker.example
+      #   - Les vraies valeurs viennent des GitHub Secrets via env: ci-dessus
+      # ✅ Corrigé: CRITIQUE — sans cette étape docker compose up échoue
+      - name: Create env file for CI/CD
+        run: cp .env.docker.example .env.docker
       
       
       # ====================================================================
@@ -278,8 +296,9 @@ jobs:
       # ====================================================================
       # Pourquoi attendre plus longtemps que dockerfile-verify?
       # PostgreSQL démarre plus lentement que Node.js seul
+      # ✅ Corrigé: sleep 5 → sleep 20 (PostgreSQL a besoin de plus de temps)
       - name: Wait for services to start
-        run: sleep 5
+        run: sleep 20
       
       
       # ====================================================================
@@ -311,7 +330,7 @@ jobs:
       # Nettoyage: éviter de laisser des processus/ports actifs
       # Module 7: Gestion du cycle de vie docker-compose
       - name: Stop all services
-        run: docker compose down # Tâche: Quelle commande pour arrêter tous les services? 
+        run: docker compose down # Tâche: Quelle commande pour arrêter tous les services?
 
 
 
